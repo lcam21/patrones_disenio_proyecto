@@ -9,9 +9,9 @@ def neural_net_image_input(image_shape):
 	#image_shape: Shape of the images
 	#return: Tensor for image input.
 	# TODO: Implement Function
-	#x = tf.placeholder(tf.float32, name = 'x',  shape=(None,image_shape[0],image_shape[1],image_shape[2]))
+	x = tf.placeholder(tf.float32, name = 'x',  shape=(None,image_shape[0],image_shape[1],image_shape[2]))
 	#x = tf.placeholder(tf.float32, name = 'x',  shape=(None,image_shape[0],image_shape[1]))
-	x = tf.placeholder(tf.float32, shape=(None, image_shape), name="x")
+	#x = tf.placeholder(tf.float32, shape=(None, image_shape), name="x")
 	return x
 
 def neural_net_label_input(n_classes):
@@ -50,9 +50,9 @@ def conv2d_maxpool(x_tensor, conv_num_outputs, conv_ksize, conv_strides, pool_ks
     # print(x_tensor.get_shape()[3])
     # print((conv_ksize[0], conv_ksize[1], x_tensor.get_shape()[3].value,conv_num_outputs))
     
-    weights = tf.Variable(tf.truncated_normal((conv_ksize[0], conv_ksize[1], conv_ksize[1],conv_num_outputs), stddev=0.05))
+    weights = tf.Variable(tf.truncated_normal((conv_ksize[0], conv_ksize[1], x_tensor.get_shape()[3].value,conv_num_outputs), stddev=0.05))
     bias = tf.Variable(tf.truncated_normal([conv_num_outputs], dtype=tf.float32))
-    
+	
     # Apply a convolution to x_tensor using weight and conv_strides.
     # tf.nn.conv2d(input, filter, strides, padding, use_cudnn_on_gpu=None, data_format=None, name=None)
         
@@ -116,7 +116,7 @@ def conv_net(x, keep_prob):
     # Function Definition from Above:
     
     num_outputs_fc = 128
-    num_outputs_out = 10
+    num_outputs_out = 12
     conv_num_outputs1 = 64
     conv_num_outputs2 = 128
     conv_num_outputs3 = 256
@@ -179,9 +179,11 @@ def train_neural_network(session, optimizer, keep_probability, feature_batch, la
 	#: keep_probability: keep probability
 	#: feature_batch: Batch of Numpy image data
 	#: label_batch: Batch of Numpy label data
+	
+	input_layer = np.reshape(feature_batch, [-1, 128, 128, 1])
     
 	# TODO: Implement Function
-	session.run(optimizer, feed_dict={x: feature_batch, y: label_batch, keep_prob: keep_probability})
+	session.run(optimizer, feed_dict={x: input_layer, y: label_batch, keep_prob: keep_probability})
 	pass
 
 def print_stats(session, feature_batch, label_batch, cost, accuracy):
@@ -226,7 +228,7 @@ tf.reset_default_graph()
 
 # Inputs
 #x = tf.placeholder(tf.float32, shape=(None, 16384), name="X")
-x = neural_net_image_input(16364)
+x = neural_net_image_input((128,128,1))
 y = neural_net_label_input(12)
 keep_prob = neural_net_keep_prob_input()
 
@@ -251,7 +253,10 @@ epochs = 20
 batch_size = 32
 keep_probability = 0.7
 
-print('Checking the Training on a Single Batch...')
+save_model_path = './image_classification'
+
+print('')
+print('Training...')
 with tf.Session() as sess:
 	# Initializing the variables
 	sess.run(tf.global_variables_initializer())
@@ -262,3 +267,6 @@ with tf.Session() as sess:
 			train_neural_network(sess, optimizer, keep_probability, batch_features, batch_labels)
 		print('Epoch {:>2}: '.format(epoch + 1), end='')
 		print_stats(sess, batch_features, batch_labels, cost, accuracy)
+		
+	saver = tf.train.Saver()
+	save_path = saver.save(sess, save_model_path)
