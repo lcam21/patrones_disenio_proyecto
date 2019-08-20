@@ -120,6 +120,8 @@ def batch_features_labels(features, labels, batch_size):
 	#Split features and labels into batches
 	for start in range(0, len(features), batch_size):
 		end = min(start + batch_size, len(features))
+		print("Star: ", start)
+		print("End: ", end)
 		yield features[start:end], labels[start:end]
 
 def load_preprocess_training_batch(batch_size):

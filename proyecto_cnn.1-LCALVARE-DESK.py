@@ -2,6 +2,8 @@ import pickle
 import helper
 import tensorflow as tf
 import numpy as np
+import sklearn.preprocessing
+import sklearn.metrics
 
 def neural_net_image_input(image_shape):
 
@@ -197,8 +199,7 @@ def print_stats(session, feature_batch, label_batch, cost, accuracy):
 	"""
     # TODO: Implement Function
 	feature_batch = np.reshape(feature_batch, [-1, image_size, image_size, image_channel])
-	valid_features = np.reshape(valid_features, [-1, image_size, image_size, image_channel])
-	valid_labels = np.reshape(valid_labels, [-1, number_clases])
+	valid_features = np.reshape(feature_batch, [-1, image_size, image_size, image_channel])
 	
     # Calculate batch loss and accuracy
 	loss = session.run(cost, feed_dict={
@@ -256,6 +257,9 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
 with open("fingers_dataset_unscaled.pickle", "rb") as f:
       valid_features, valid_labels, test_data, test_labels = pickle.load(f)
 
+encoder = sklearn.preprocessing.OneHotEncoder(sparse=False, categories='auto')
+valid_labels = encoder.fit_transform(valid_labels.reshape(-1, 1))
+
 # TODO: Tune Parameters
 epochs = 20
 batch_size = 32
@@ -273,8 +277,8 @@ with tf.Session() as sess:
 		batch_i = 1
 		for batch_features, batch_labels in helper.load_preprocess_training_batch(batch_size):
 			train_neural_network(sess, optimizer, keep_probability, batch_features, batch_labels)
-		print('Epoch {:>2}: '.format(epoch + 1), end='')
+		print('Epoch ',(epoch + 1))
 		print_stats(sess, batch_features, batch_labels, cost, accuracy)
-		
+	
 	saver = tf.train.Saver()
 	save_path = saver.save(sess, save_model_path)

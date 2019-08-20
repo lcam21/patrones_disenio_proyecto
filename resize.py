@@ -1,4 +1,3 @@
-#GET DATA
 
 import os 
 import pickle
@@ -32,8 +31,11 @@ def get_data_and_labels(images_path, num_of_rows, num_of_colums):
 		
 			if (num_of_items % 1000) == 0:      
 				print("Current image number: %7d" % num_of_items)
-			img = mpimg.imread(images_path + "/" + filename)
-			data[num_of_items] = np.reshape(np.array(img),(num_of_image_values))
+			img = Image.open(images_path + "/" + filename)
+			img = img.resize((num_of_rows, num_of_colums))
+			#img = mpimg.imread(images_path + "/" + filename)
+			array = np.array(img)
+			data[num_of_items] = np.reshape(array,(num_of_image_values))
 			
 			if (filename.find(labels_name_files[0])>-1):
 				labels.append(labels_definition[0])
@@ -68,38 +70,26 @@ def get_data_and_labels(images_path, num_of_rows, num_of_colums):
 		labels = np.array(labels)
 		data = np.array(data)
 		return data, labels
-
+	
 	finally:
-			print("Completed data reading")
-			
-def save_data_and_labels(data_file_name, labels_file_name, data_array, labels_array):
-	try:
-		np.savetxt(data_file_name + ".csv", data_array, delimiter=",")
-		np.savetxt(labels_file_name + ".csv", labels_array, delimiter=",")
-		
-	finally:
-			print("Saved files")
-
-
-
+		print("Completed data resizing")
+	
+image_size = 32
 print("Reading training dataset")
-train_data, train_labels = get_data_and_labels("train", 128, 128)
+train_data, train_labels = get_data_and_labels("train", image_size, image_size)
 train_size = train_data.shape[0]
 
 print("Reading test dataset")
-test_data, test_labels = get_data_and_labels("test", 128, 128)
+test_data, test_labels = get_data_and_labels("test", image_size, image_size)
 test_size = test_data.shape[0]
 
-'''
-# Plot a histogram of pixel values before normalization
-print("Histogram of pixel values before normalization")
-hist, bins = np.histogram(train_data, 50)
-center = (bins[:-1] + bins[1:]) / 2
-width = np.diff(bins)
-plt.bar(center, hist, align='center', width=width)
-plt.title("Train dataset")
+# Showing 12 images as sample
+for idx in range(5):
+  image = test_data[idx].reshape(image_size,image_size)
+  plt.figure()
+  plt.imshow(image)
+  plt.title("Label: "+str(test_labels[idx]))
 plt.show()
-'''
 
 # Compute the mean and stddev
 pixel_mean = np.mean(train_data)
@@ -111,64 +101,8 @@ print("Pixel stddev:", pixel_std)
 train_data_scaled = (train_data - pixel_mean) / pixel_std
 test_data_scaled = (test_data - pixel_mean) / pixel_std
 
-'''
-# Plot a histogram of pixel values
-print("Histogram of pixel values after normalization")
-hist, bins = np.histogram(train_data_scaled, 50)
-center = (bins[:-1] + bins[1:]) / 2
-width = np.diff(bins)
-plt.bar(center, hist, align='center', width=width)
-plt.title("Train dataset scaled")
-plt.show()
-
-hist, bins = np.histogram(test_data_scaled, 50)
-center = (bins[:-1] + bins[1:]) / 2
-width = np.diff(bins)
-plt.bar(center, hist, align='center', width=width)
-plt.title("Test dataset scaled")
-plt.show()
-'''
-
-# Archive the scaled training and test datasets into a pickle file
-#with open("fingers_dataset.pickle", 'wb') as f:
-#      pickle.dump([train_data_scaled, train_labels, test_data_scaled, test_labels], \
-#                  f, pickle.HIGHEST_PROTOCOL)
-
 # Archive the original set as uint8, to save space
 print("Saving data and labels in  pickle file")
-with open("fingers_dataset_unscaled_28_28.pickle", 'wb') as f:
-      pickle.dump([train_data, train_labels, test_data, test_labels], \
+with open("fingers_dataset_scaled_resize_32_32.pickle", 'wb') as f:
+      pickle.dump([train_data_scaled, train_labels, test_data_scaled, test_labels], \
                   f, pickle.HIGHEST_PROTOCOL)
-
-#print("Saving test dataset")
-#save_data_and_labels("test_data_file", "test_labels_file", test_data, test_labels)
-
-#print("Saving traing dataset")
-#save_data_and_labels("train_data_file", "train_labels_file", train_data, train_labels)
-
-# Some information about the test dataset
-#print("Test dataset size: ", test_data.shape)
-#print("Class histogram: ")
-#print(np.histogram(test_labels, 12)[0])
-
-# Some information about the training dataset
-#print("Training dataset size: ", train_data.shape)
-#print("Class histogram: ")
-#print(np.histogram(train_labels, 12)[0])
-
-
-
-'''
-# Showing 12 images as sample
-for idx in range(12):
-  image = test_data[idx].reshape(128,128)
-  plt.figure()
-  plt.imshow(image, cmap="gray_r")
-  plt.title("Label: "+str(test_labels[idx]))
-plt.show()
-'''
-
-
-
-
-

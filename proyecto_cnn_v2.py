@@ -2,6 +2,8 @@ import pickle
 import helper
 import tensorflow as tf
 import numpy as np
+import sklearn.preprocessing
+import sklearn.metrics
 
 def neural_net_image_input(image_shape):
 
@@ -197,8 +199,7 @@ def print_stats(session, feature_batch, label_batch, cost, accuracy):
 	"""
     # TODO: Implement Function
 	feature_batch = np.reshape(feature_batch, [-1, image_size, image_size, image_channel])
-	valid_features = np.reshape(valid_features, [-1, image_size, image_size, image_channel])
-	valid_labels = np.reshape(valid_labels, [-1, number_clases])
+	valid_features = np.reshape(feature_batch, [-1, image_size, image_size, image_channel])
 	
     # Calculate batch loss and accuracy
 	loss = session.run(cost, feed_dict={
@@ -254,27 +255,67 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
 
 # Load the training and test data from the Pickle file
 with open("fingers_dataset_unscaled.pickle", "rb") as f:
-      valid_features, valid_labels, test_data, test_labels = pickle.load(f)
+      train_data, train_labels, test_data, test_labels = pickle.load(f)
+
+# Scale the training and test data
+pixel_mean = np.mean(train_data)
+pixel_std = np.std(train_data)
+train_data = (train_data - pixel_mean) / pixel_std
+test_data = (test_data - pixel_mean) / pixel_std
+
+# One-hot encode the labels
+encoder = sklearn.preprocessing.OneHotEncoder(sparse=False, categories='auto')
+train_labels_onehot = encoder.fit_transform(train_labels.reshape(-1, 1))
+test_labels_onehot = encoder.transform(test_labels.reshape(-1, 1))
+num_classes = len(encoder.categories_[0])
+
+# Get some lengths
+nsamples = train_data.shape[0]
 
 # TODO: Tune Parameters
-epochs = 20
+n_epochs = 20
 batch_size = 32
 keep_probability = 0.7
+n_batches = int(np.ceil(nsamples / batch_size))
+eval_step = 5
 
-save_model_path = './image_classification'
+save_model_path = './image_classification_128'
+
+# Create TensorFlow session and initialize it
+sess = tf.Session()
+init = tf.global_variables_initializer()
+sess.run(init)
 
 print('')
-print('Training...')
-with tf.Session() as sess:
-	# Initializing the variables
-	sess.run(tf.global_variables_initializer())
-	# Training cycle
-	for epoch in range(epochs):
-		batch_i = 1
-		for batch_features, batch_labels in helper.load_preprocess_training_batch(batch_size):
-			train_neural_network(sess, optimizer, keep_probability, batch_features, batch_labels)
-		print('Epoch {:>2}: '.format(epoch + 1), end='')
-		print_stats(sess, batch_features, batch_labels, cost, accuracy)
+print('Starting training...')
+epoch = 0
+while epoch < n_epochs:
+	batch = 0
+
+    # Save a vector of cost values per batch
+	cost_vals = np.zeros(n_batches)
+	print("Epoch: {:4d}" .format(epoch))
+	while batch < n_batches:
+		# Select the data for the next batch
+		dataidx = batch * batch_size
+		X_batch = train_data[dataidx:(dataidx+batch_size)]
+		Y_batch = train_labels_onehot[dataidx:(dataidx+batch_size)]
+		X_batch = np.reshape(X_batch, [-1, image_size, image_size, image_channel])
+		feed_dict = {x: X_batch, y: Y_batch, keep_prob: keep_probability}
+		#print("Data between {:4d} and {:4d}".format(dataidx, (dataidx+batch_size)))
+		# Run one iteration of the computation session to update coefficients
+		sess.run(optimizer, feed_dict=feed_dict)
+		#cost_vals[batch] = sess.run(cost, feed_dict={x: X_batch,y: Y_batch,keep_prob: 1.})
+		batch += 1
 		
-	saver = tf.train.Saver()
-	save_path = saver.save(sess, save_model_path)
+	# Evaluate and print the results so far
+	# Calculate epoch loss and accuracy
+	loss = sess.run(cost, feed_dict={x: X_batch,y: Y_batch,keep_prob: 1.})
+	train_acc = sess.run(accuracy, feed_dict={x: X_batch,y: Y_batch,keep_prob: 1.})
+	print("Epoch: {:4d}	Trainig_cost: {:.5f}	Traing_Accuracy: {:.6f}".format(epoch, loss, train_acc))
+	epoch += 1
+	
+# Save Model
+saver = tf.train.Saver()
+save_path = saver.save(sess, save_model_path)
+
