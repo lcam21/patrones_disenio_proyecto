@@ -52,3 +52,4 @@ test_loss, test_acc = model.evaluate(test_data, test_labels)
 
 print("Accuracy: ", test_acc)
 
+model.save("model_keras.h5")
