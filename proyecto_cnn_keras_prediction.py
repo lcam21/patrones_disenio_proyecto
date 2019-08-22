@@ -4,8 +4,9 @@ from tensorflow.keras.models import load_model
 
 model_saved = load_model('model_keras.h5')
 
-img = mpimg.imread("1L_test3587.jpg")
+img = mpimg.imread("testing_jpg/img_21.jpg")
 array = np.array(img)
+print(array.shape)
 
 array = np.reshape(array, [-1,128,128,3])
 
