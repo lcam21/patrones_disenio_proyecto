@@ -4,7 +4,7 @@ import cv2 as cv
 from resnet_50 import resnet50_model
 
 def load_model():
-    model_weights_path = 'models/model.76-0.90.hdf5'
+    model_weights_path = 'models/model.89-0.90.hdf5'
     img_width, img_height = 224, 224
     num_channels = 3
     num_classes = 196
