@@ -14,7 +14,7 @@ num_train_samples = 6549
 num_valid_samples = 1595
 verbose = 1
 batch_size = 16
-num_epochs = 200
+num_epochs = 300
 patience = 50
 
 if __name__ == '__main__':

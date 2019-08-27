@@ -1,5 +1,4 @@
 # import the necessary packages
-import json
 import os
 import random
 
@@ -13,16 +12,12 @@ from utils import load_model
 if __name__ == '__main__':
 	img_width, img_height = 224, 224
 	model = load_model()
-	#model.load_weights('models/model.76-0.90.hdf5')
 
 	cars_meta = scipy.io.loadmat('devkit/cars_meta')
 	class_names = cars_meta['class_names']  # shape=(1, 196)
 	class_names = np.transpose(class_names)
 	results = []
 	results.append(["Prediction","Probability"])
-	test_path = 'data/prediction/'
-    
-	
 	
 	####
 	test_path = 'data/test/'
@@ -35,6 +30,7 @@ if __name__ == '__main__':
 		filename = os.path.join(test_path, image_name)
 		bgr_img = cv.imread(filename)
 	####
+	# test_path = 'data/prediction/'
 	#i = -1
 	#for filename in os.listdir(test_path):
 	#	print('Start processing image: {}'.format(filename))

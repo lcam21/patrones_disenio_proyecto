@@ -7,8 +7,6 @@ import os
 import cv2 as cv
 import shutil
 import random
-#from console_progressbar import ProgressBar
-
 
 def ensure_folder(folder):
     if not os.path.exists(folder):
@@ -22,8 +20,6 @@ def save_train_data(fnames, labels, bboxes):
     train_split = 0.8
     num_train = int(round(num_samples * train_split))
     train_indexes = random.sample(range(num_samples), num_train)
-
-    pb = ProgressBar(total=100, prefix='Save train data', suffix='', decimals=3, length=50, fill='=')
 
     for i in range(num_samples):
         fname = fnames[i]
@@ -40,7 +36,6 @@ def save_train_data(fnames, labels, bboxes):
         x2 = min(x2 + margin, width)
         y2 = min(y2 + margin, height)
         #print("{} -> {}".format(fname, label))
-        pb.print_progress_bar((i + 1) * 100 / num_samples)
 
         if i in train_indexes:
             dst_folder = 'data/train'
@@ -56,13 +51,11 @@ def save_train_data(fnames, labels, bboxes):
         dst_img = cv.resize(src=crop_image, dsize=(img_height, img_width))
         cv.imwrite(dst_path, dst_img)
 
-
 def save_test_data(fnames, bboxes):
     src_folder = 'cars_test'
     dst_folder = 'data/test'
     num_samples = len(fnames)
 
-    pb = ProgressBar(total=100, prefix='Save test data', suffix='', decimals=3, length=50, fill='=')
 
     for i in range(num_samples):
         fname = fnames[i]
@@ -77,8 +70,7 @@ def save_test_data(fnames, bboxes):
         x2 = min(x2 + margin, width)
         y2 = min(y2 + margin, height)
         #print(fname)
-        pb.print_progress_bar((i + 1) * 100 / num_samples)
-
+		
         dst_path = os.path.join(dst_folder, fname)
         crop_image = src_image[y1:y2, x1:x2]
         dst_img = cv.resize(src=crop_image, dsize=(img_height, img_width))

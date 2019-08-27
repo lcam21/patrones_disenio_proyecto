@@ -1,6 +1,5 @@
 import cv2 as cv
 
-#from resnet_152 import resnet152_model
 from resnet_50 import resnet50_model
 
 def load_model():
